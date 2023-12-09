@@ -32,11 +32,11 @@
 
 import SwiftUI
 
-@main
-struct KuchiApp: App {
-  var body: some Scene {
-    WindowGroup {
-      WelcomeView()
-    }
-  }
+struct HorizontallyAlignedLabelStyle: LabelStyle {
+	func makeBody(configuration: Configuration) -> some View {
+		HStack {
+			configuration.icon
+			configuration.title
+		}
+	}
 }

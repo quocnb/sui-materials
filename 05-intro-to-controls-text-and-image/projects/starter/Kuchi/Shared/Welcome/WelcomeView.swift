@@ -32,11 +32,44 @@
 
 import SwiftUI
 
-@main
-struct KuchiApp: App {
-  var body: some Scene {
-    WindowGroup {
-      WelcomeView()
-    }
-  }
+struct WelcomeView: View {
+    var body: some View {
+			ZStack {
+				Image("welcome-background")
+					.resizable()
+					.aspectRatio(1/1, contentMode: .fill)
+					.edgesIgnoringSafeArea(.all)
+					.saturation(0.5)
+					.blur(radius: 5)
+					.opacity(0.1)
+				Label(
+					title: {
+						VStack(alignment: .leading, content: {
+							Text("**Welcome to**")
+								.font(.headline)
+							Text("**Kuchi**")
+								.font(.largeTitle)
+						})
+						.foregroundStyle(Color.red)
+						.lineLimit(1)
+						.padding(.horizontal)
+					},
+					icon: {
+						Image(systemName: "table")
+							.resizable()
+							.frame(width: 30, height: 30)
+							.overlay {
+								Circle().stroke(Color.red, lineWidth: 1)
+							}
+							.background(Color(white: 0.9))
+							.clipShape(Circle())
+							.foregroundColor(.red)
+					}
+				).labelStyle(HorizontallyAlignedLabelStyle())
+			}
+		}
+}
+
+#Preview {
+    WelcomeView()
 }
