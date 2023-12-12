@@ -32,17 +32,77 @@
 
 import SwiftUI
 
-struct WelcomeView: View {
-  var body: some View {
-    ZStack {
-      WelcomeBackgroundImage()
-      WelcomeMessageView()
+struct RegisterView: View {
+
+	@FocusState var nameFieldFocus: Bool
+	@EnvironmentObject var userManager: UserManager
+
+    var body: some View {
+			VStack {
+				Spacer()
+				WelcomeMessageView()
+				TextField("Type your name", text: $userManager.profile.name)
+					.focused($nameFieldFocus)
+					.submitLabel(.done)
+					.bordered()
+					.onAppear(perform: {
+						nameFieldFocus = true
+					})
+				HStack {
+					Spacer()
+					Text("\(userManager.profile.name.count)")
+						.font(.caption)
+						.foregroundStyle(userManager.isUserNameValid() ? Color.green : Color.red)
+						.padding(.trailing)
+				}
+				.padding(.bottom)
+				
+				HStack {
+					Spacer()
+					Toggle(isOn: $userManager.settings.rememberUser, label: {
+						Text("Remember me")
+							.font(.subheadline)
+							.foregroundStyle(.gray)
+					})
+					.fixedSize()
+				}
+				
+				Button(action: {
+					registerUser()
+				}, label: {
+					HStack {
+						Image(systemName: "checkmark")
+							.resizable()
+							.frame(width: 16, height: 16, alignment: .center)
+						Text("OK")
+							.font(.body)
+							.bold()
+					}
+				})
+				.disabled(!userManager.isUserNameValid())
+				.bordered()
+				Spacer()
+			}
+			.padding()
+			.background(WelcomeBackgroundImage())
     }
-  }
 }
 
-struct WelcomeView_Previews: PreviewProvider {
-  static var previews: some View {
-    WelcomeView()
-  }
+// MARK: - Event Handlers
+extension RegisterView {
+	func registerUser() {
+		nameFieldFocus = false
+		if userManager.settings.rememberUser {
+			userManager.persistProfile()
+		} else {
+			userManager.clear()
+		}
+		userManager.persistSettings()
+		userManager.setRegistered()
+	}
+}
+
+#Preview {
+	RegisterView()
+		.environmentObject(UserManager(name: "Quoc"))
 }
