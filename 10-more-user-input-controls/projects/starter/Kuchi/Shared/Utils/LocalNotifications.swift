@@ -90,6 +90,7 @@ class LocalNotifications {
   
   func deleteReminder() {
     userNotificationCenter.removeAllDeliveredNotifications()
+    userNotificationCenter.removeAllPendingNotificationRequests()
   }
   
   func requestLocalNotificationPermission(completion: @escaping (_ granted: Bool) -> Void) {

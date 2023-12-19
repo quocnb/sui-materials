@@ -33,13 +33,43 @@
 import SwiftUI
 
 struct HomeView: View {
-  var body: some View {
-    EmptyView()
-  }
+	@EnvironmentObject var userManager: UserManager
+	@EnvironmentObject var challengesViewModel: ChallengesViewModel
+	@State var selectedTab = 0
+	var body: some View {
+		TabView(selection: $selectedTab, content:  {
+			PracticeView(
+				challengeTest: $challengesViewModel.currentChallenge,
+				userName: $userManager.profile.name,
+				numberOfAnswered: .constant(challengesViewModel.numberOfAnswered)
+			)
+			.environment(
+				\.questionsPerSession,
+				 challengesViewModel.numberOfQuestions
+			)
+			.tabItem {
+				VStack {
+					Image(systemName: "rectangle.dock")
+					Text("Challenge")
+				}
+			}.tag(1)
+			
+			SettingsView()
+				.tint(nil)
+				.tabItem {
+					VStack {
+						Image(systemName: "gear")
+						Text("Settings")
+					}
+				}.tag(2)
+		})
+	}
 }
 
 struct HomeView_Previews: PreviewProvider {
-  static var previews: some View {
-    HomeView()
-  }
+	static var previews: some View {
+		HomeView()
+			.environmentObject(UserManager())
+			.environmentObject(ChallengesViewModel())
+	}
 }

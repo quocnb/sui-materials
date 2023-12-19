@@ -32,40 +32,67 @@
 
 import SwiftUI
 
-struct WelcomeView: View {
-  @EnvironmentObject var userManager: UserManager
-  @EnvironmentObject var challengesViewModel: ChallengesViewModel
-  @State var showPractice = false
-  
-  var body: some View {
-    if showPractice {
-      HomeView()
-    } else {
-      ZStack {
-        WelcomeBackgroundImage()
-        
-        VStack {
-          Text(verbatim: "Hi, \(userManager.profile.name)")
-          
-          WelcomeMessageView()
-          
-          Button {
-            showPractice = true
-          } label: {
-            HStack {
-              Image(systemName: "play")
-              Text(verbatim: "Start")
-            }
-          }
-        }
-      }
-    }
-  }
+struct SettingsView: View {
+	@State var numberOfQuestions = 6
+	@State var learningEnabled = true
+	@State var cardBackgroundColor = Color.red
+	@State var dailyReminder = false
+	@State var dailyReminderTime = Date(timeIntervalSince1970: 0)
+	@State var appearance: Appearance = .automatic
+	
+	var body: some View {
+		List {
+			Text("Settings")
+				.font(.largeTitle)
+				.padding(.bottom, 8)
+			Section(header: Text("Appearance"), content: {
+				VStack(alignment: .leading, content: {
+					Picker("", selection: $appearance) {
+						ForEach(Appearance.allCases) { appearance in
+							Text(appearance.name).tag(appearance)
+						}
+					}.pickerStyle(.segmented)
+					ColorPicker("Card Background Color", selection: $cardBackgroundColor)
+				})
+			})
+			Section(header: Text("Game"), content: {
+				VStack(alignment: .leading, content: {
+					Stepper("Number of Questions:\(numberOfQuestions)", value: $numberOfQuestions, in: 3...20)
+					Text("Any change will affect the next game")
+						.font(.caption2)
+						.foregroundStyle(.secondary)
+				})
+				Toggle(isOn: $learningEnabled) {
+					Text("Learning Enabled")
+				}
+			})
+			Section(header: Text("Notifications"), content: {
+				HStack {
+					Toggle("Daily Reminder", isOn: $dailyReminder)
+					DatePicker("", selection: $dailyReminderTime, displayedComponents: .hourAndMinute)
+						.disabled(!dailyReminder)
+				}
+				.onChange(of: dailyReminder, perform: { value in
+					configureNotification()
+					})
+				.onChange(of: dailyReminderTime, perform: { value in
+					configureNotification()
+				})
+			})
+		}
+	}
 }
 
-struct WelcomeView_Previews: PreviewProvider {
-  static var previews: some View {
-    WelcomeView()
-      .environmentObject(UserManager())
-  }
+extension SettingsView {
+	private func configureNotification() {
+		if dailyReminder {
+			LocalNotifications.shared.createReminder(time: dailyReminderTime)
+		} else {
+			LocalNotifications.shared.deleteReminder()
+		}
+	}
+}
+
+#Preview {
+	SettingsView()
 }
