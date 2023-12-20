@@ -38,7 +38,7 @@ struct ChallengeView: View {
   @State var showAnswers = false
   @Binding var numberOfAnswered: Int
   @Environment(\.verticalSizeClass) var verticalSizeClass
-  @Environment(\.questionsPerSession) var questionsPerSession
+	@EnvironmentObject var challengesViewModel: ChallengesViewModel
   
   var body: some View {
     if verticalSizeClass == .compact {
@@ -56,7 +56,7 @@ struct ChallengeView: View {
           }
         }
         ScoreView(
-          numberOfQuestions: questionsPerSession,
+					numberOfQuestions: challengesViewModel.$numberOfQuestions,
           numberOfAnswered: $numberOfAnswered
         )
       }
@@ -70,7 +70,7 @@ struct ChallengeView: View {
           .frame(height: 300)
         }
         ScoreView(
-          numberOfQuestions: questionsPerSession,
+          numberOfQuestions: challengesViewModel.$numberOfQuestions,
           numberOfAnswered: $numberOfAnswered
         )
         if showAnswers {

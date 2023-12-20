@@ -35,6 +35,7 @@ import SwiftUI
 struct HomeView: View {
 	@EnvironmentObject var userManager: UserManager
 	@EnvironmentObject var challengesViewModel: ChallengesViewModel
+	@AppStorage("appearance") var appearance: Appearance = .automatic
 	@State var selectedTab = 0
 	var body: some View {
 		TabView(selection: $selectedTab, content:  {
@@ -43,10 +44,7 @@ struct HomeView: View {
 				userName: $userManager.profile.name,
 				numberOfAnswered: .constant(challengesViewModel.numberOfAnswered)
 			)
-			.environment(
-				\.questionsPerSession,
-				 challengesViewModel.numberOfQuestions
-			)
+			.preferredColorScheme(appearance.getColorScheme())
 			.tabItem {
 				VStack {
 					Image(systemName: "rectangle.dock")
@@ -55,6 +53,7 @@ struct HomeView: View {
 			}.tag(1)
 			
 			SettingsView()
+				.preferredColorScheme(appearance.getColorScheme())
 				.tint(nil)
 				.tabItem {
 					VStack {

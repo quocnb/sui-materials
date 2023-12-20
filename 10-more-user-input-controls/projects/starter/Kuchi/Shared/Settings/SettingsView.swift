@@ -33,12 +33,13 @@
 import SwiftUI
 
 struct SettingsView: View {
-	@State var numberOfQuestions = 6
-	@State var learningEnabled = true
+	@EnvironmentObject var challengesViewModel: ChallengesViewModel
+	@AppStorage("learningEnabled") var learningEnabled = true
 	@State var cardBackgroundColor = Color.red
-	@State var dailyReminder = false
+	@AppStorage("dailyReminder") var dailyReminder = false
 	@State var dailyReminderTime = Date(timeIntervalSince1970: 0)
-	@State var appearance: Appearance = .automatic
+	@AppStorage("dailyReminderTime") var dailyReminderTimeShadow: Double = 0
+	@AppStorage("appearance") var appearance: Appearance = .automatic
 	
 	var body: some View {
 		List {
@@ -57,7 +58,7 @@ struct SettingsView: View {
 			})
 			Section(header: Text("Game"), content: {
 				VStack(alignment: .leading, content: {
-					Stepper("Number of Questions:\(numberOfQuestions)", value: $numberOfQuestions, in: 3...20)
+					Stepper("Number of Questions: \(challengesViewModel.numberOfQuestions)", value: $challengesViewModel.numberOfQuestions, in: 3...20)
 					Text("Any change will affect the next game")
 						.font(.caption2)
 						.foregroundStyle(.secondary)
@@ -76,7 +77,11 @@ struct SettingsView: View {
 					configureNotification()
 					})
 				.onChange(of: dailyReminderTime, perform: { value in
+					dailyReminderTimeShadow = value.timeIntervalSince1970
 					configureNotification()
+				})
+				.onAppear(perform: {
+					dailyReminderTime = Date(timeIntervalSince1970: dailyReminderTimeShadow)
 				})
 			})
 		}
@@ -94,5 +99,5 @@ extension SettingsView {
 }
 
 #Preview {
-	SettingsView()
+	SettingsView().environmentObject(ChallengesViewModel())
 }
