@@ -40,7 +40,7 @@ struct LearnView: View {
 				Text("Swipe left if you remembered"
 				 + "\nSwipe right if you didn't")
 				.font(.headline)
-				DeckView(deck: FlashDeck(from: ChallengesViewModel.challenges), onMemorized: {
+				DeckView(deck: learningStore.deck, onMemorized: {
 					learningStore.score += 1
 				})
 				Spacer()

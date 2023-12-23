@@ -32,6 +32,10 @@
 
 import SwiftUI
 
+enum DiscardedDirection {
+	case left, right
+}
+
 struct DeckView: View {
 	@ObservedObject var deck: FlashDeck
 	@AppStorage("cardBackgroundColor")
@@ -39,6 +43,7 @@ struct DeckView: View {
 	let onMemorized: () -> Void
 	
 	init(deck: FlashDeck, onMemorized: @escaping () -> Void) {
+		print("Hey, init again!!!")
 		self.deck = deck
 		self.onMemorized = onMemorized
 	}
@@ -67,7 +72,11 @@ struct DeckView: View {
 			Color(rgba: cardBackgroundColorInt)
 		}, set: { newValue in
 			cardBackgroundColorInt = newValue.asRgba
-		}))
+		})) { card, direction in
+			if direction == .left {
+				onMemorized()
+			}
+		}
 	}
 }
 

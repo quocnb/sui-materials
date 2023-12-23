@@ -48,7 +48,8 @@ class LearningStore: ObservableObject {
 		guard let card = deck.cards.last else {
 			return nil
 		}
-		self.card = self.deck.cards.removeLast()
+		self.card = card
+		self.deck.cards.removeLast()
 		return self.card
 	}
 }

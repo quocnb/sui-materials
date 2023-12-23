@@ -33,17 +33,51 @@
 import SwiftUI
 
 struct CardView: View {
+	
+	typealias CardDrag = (_ card: FlashCard, _ direction: DiscardedDirection) -> Void
+	
+	let dragged: CardDrag
+	
+	@State var offset: CGSize = .zero
+	
 	@Binding var cardColor: Color
+	@State var revealed = false
+	@GestureState var isLongPressed = false
 	
 	let flashCard: FlashCard
 	
-	init(flashCard: FlashCard, cardColor: Binding<Color>) {
+	init(flashCard: FlashCard, cardColor: Binding<Color>, onDrag dragged: @escaping CardDrag = {_, _ in }) {
 		self.flashCard = flashCard
 		_cardColor = cardColor
+		self.dragged = dragged
 	}
 	
     var body: some View {
-			ZStack {
+			let drag = DragGesture()
+				.onChanged { dragValue in
+					offset = dragValue.translation
+				}.onEnded { dragValue in
+					if dragValue.translation.width < -100 {
+						offset = .init(width: -1000, height: 0)
+						dragged(flashCard, .left)
+					} else if dragValue.translation.width > 100 {
+						offset = .init(width: 1000, height: 0)
+						dragged(flashCard, .right)
+					} else {
+						offset = .zero
+					}
+				}
+			let longPress = LongPressGesture()
+				.updating($isLongPressed) { value, state, transaction in
+					state = value
+				}.simultaneously(with: drag)
+				.simultaneously(with: TapGesture()
+					.onEnded({
+					 withAnimation(.easeIn) {
+						 revealed.toggle()
+					 }
+				 }))
+			return ZStack {
 				Rectangle()
 					.fill(cardColor)
 					.frame(width: 320, height: 210)
@@ -53,15 +87,21 @@ struct CardView: View {
 					Text(flashCard.card.question)
 						.font(.largeTitle)
 						.foregroundStyle(.white)
-					Text(flashCard.card.answer)
-						.font(.caption)
+					if revealed {
+						Text(flashCard.card.answer)
+							.font(.caption)
 						.foregroundStyle(.white)
+					}
 					Spacer()
 				}
 			}
 			.shadow(radius: 8)
 			.frame(width: 320, height: 210)
-			.animation(.spring(), value: 0)
+			.animation(.spring(), value: offset)
+			.offset(offset)
+			.gesture(longPress)
+			.scaleEffect(isLongPressed ? 1.1 : 1)
+			.animation(.easeInOut(duration: 0.3), value: isLongPressed)
     }
 }
 
