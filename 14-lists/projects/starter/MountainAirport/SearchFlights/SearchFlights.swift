@@ -28,22 +28,69 @@
 
 import SwiftUI
 
+struct HierarchicalFlightRow: Identifiable {
+	var label: String
+	var flight: FlightInformation?
+	var children: [HierarchicalFlightRow]?
+	
+	var id = UUID()
+}
+
 struct SearchFlights: View {
-  var flightData: [FlightInformation]
-  @State private var date = Date()
-  @State private var directionFilter: FlightDirection = .none
-
-  var matchingFlights: [FlightInformation] {
-    var matchingFlights = flightData
-
-    if directionFilter != .none {
-      matchingFlights = matchingFlights.filter {
-        $0.direction == directionFilter
-      }
-    }
-
-    return matchingFlights
-  }
+	var flightData: [FlightInformation]
+	@State private var date = Date()
+	@State private var directionFilter: FlightDirection = .none
+	// Search key: City
+	@State private var city = ""
+	
+	var matchingFlights: [FlightInformation] {
+		var matchingFlights = flightData
+		
+		if directionFilter != .none {
+			matchingFlights = matchingFlights.filter {
+				$0.direction == directionFilter
+			}
+		}
+		if !city.isEmpty {
+			matchingFlights = matchingFlights.filter {
+				$0.otherAirport.lowercased().contains(city.lowercased())
+			}
+		}
+		return matchingFlights
+	}
+	
+	
+	/// Create a hierarchicalFlightRow from the flight information
+	/// - Parameter flight: the flight information
+	/// - Returns: an HierrachicalFlightRow
+	func hierarchicalFlightRowFromFlight(_ flight: FlightInformation) -> HierarchicalFlightRow {
+		HierarchicalFlightRow(label: longDateFormatter.string(from: flight.localTime), flight: flight, children: nil)
+	}
+	
+	var flightDates: [Date] {
+		let allDates = matchingFlights.map { $0.localTime.dateOnly }
+		let uniqueDates = Array(Set(allDates))
+		return uniqueDates.sorted()
+	}
+	
+	func flightsForDay(date: Date) -> [FlightInformation] {
+		matchingFlights.filter {
+			Calendar.current.isDate($0.localTime, inSameDayAs: date)
+		}
+	}
+	
+	/// Flights List that grouped by Date
+	var hierarchicalFlights: [HierarchicalFlightRow] {
+		var rows = [HierarchicalFlightRow]()
+		
+		for date in flightDates {
+			let newRow = HierarchicalFlightRow(
+				label: longDateFormatter.string(from: date),
+				children: flightsForDay(date: date).map {hierarchicalFlightRowFromFlight($0)})
+			rows.append(newRow)
+		}
+		return rows
+	}
 
   var body: some View {
     ZStack {
@@ -59,11 +106,35 @@ struct SearchFlights: View {
           Text("Arrivals").tag(FlightDirection.arrival)
           Text("Departures").tag(FlightDirection.departure)
         }
-        .background(Color.white)
+				.background(.white)
+				.cornerRadius(9.0)
         .pickerStyle(SegmentedPickerStyle())
         // Insert Results
-        Spacer()
+//				List(hierarchicalFlights, children: \.children) { row in
+//					if let flight = row.flight {
+//						SearchResultRow(flight: flight)
+//					} else {
+//						Text(row.label)
+//					}
+//				}
+				List {
+					ForEach(flightDates, id: \.hashValue) { date in
+						Section {
+							ForEach(flightsForDay(date: date)) { flight in
+								SearchResultRow(flight: flight)
+							}
+						} header: {
+							Text(longDateFormatter.string(from: date))
+						} footer: {
+							Text("Matching flights \(flightsForDay(date:date).count)")
+								.frame(maxWidth: .infinity, alignment: .trailing)
+						}
+
+					}
+				}
+				.listStyle(InsetGroupedListStyle())
       }
+			.searchable(text: $city)
       .navigationBarTitle("Search Flights")
       .padding()
     }

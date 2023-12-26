@@ -39,7 +39,7 @@ struct FlightRow: View {
   }
 
   var body: some View {
-    HStack {
+		HStack {
       FlightStatusIcon(flight: flight)
         .padding(5)
         .clipShape(RoundedRectangle(cornerRadius: 7))
@@ -56,7 +56,7 @@ struct FlightRow: View {
           Text("Gate \(flight.gate)")
         }.foregroundColor(.gray)
       }
-    }
+		}.padding(.leading)
   }
 }
 
