@@ -28,69 +28,28 @@
 
 import SwiftUI
 
-struct FlightList: View {
-  var flights: [FlightInformation]
-  var flightToShow: FlightInformation?
-  @State private var path: [FlightInformation] = []
-	// An array with the id of each flight the user highlights
+struct HighlightActionView: View {
+	var flightId: Int
 	@Binding var highlightedIds: [Int]
-
-  var nextFlightId: Int {
-    guard let flight = flights.first(
-      where: {
-        $0.localTime >= Date()
-      }
-    ) else {
-      return flights.last?.id ?? 0
-    }
-    return flight.id
-  }
-
 	
-	/// Check highlighted row
-	/// - Parameter flightId: display flight id
-	func rowHighlighted(_ flightId: Int) -> Bool {
-		highlightedIds.contains(flightId)
+	func toggleHighlight() {
+		if let flightIdx = highlightedIds.firstIndex(where: { $0 == flightId }) {
+			highlightedIds.remove(at: flightIdx)
+		} else {
+			highlightedIds.append(flightId)
+		}
+		
 	}
-	
-  var body: some View {
-    NavigationStack(path: $path) {
-      ScrollViewReader { scrollProxy in
-        List(flights) { flight in
-          NavigationLink(value: flight) {
-            FlightRow(flight: flight)
-          }
-					.listRowBackground(rowHighlighted(flight.id) ? Color.yellow.opacity(0.6): Color.clear)
-					.swipeActions(edge: .leading) {
-						HighlightActionView(flightId: flight.id, highlightedIds: $highlightedIds)
-					}
-        }
-        .navigationDestination(
-          for: FlightInformation.self,
-          destination: { flight in
-            FlightDetails(flight: flight)
-          }
-        )
-        .onAppear {
-          scrollProxy.scrollTo(nextFlightId, anchor: .center)
-        }
-      }
+    var body: some View {
+			Button(action: {
+				toggleHighlight()
+			}, label: {
+				Image(systemName: "highlighter")
+			})
+			.tint(.yellow)
     }
-    .onAppear {
-      if let flight = flightToShow {
-        path.append(flight)
-      }
-    }
-  }
 }
 
-struct FlightList_Previews: PreviewProvider {
-  static var previews: some View {
-    NavigationStack {
-      FlightList(
-				flights: FlightData.generateTestFlights(date: Date()), highlightedIds: .constant([15])
-      )
-    }
-    .environmentObject(FlightNavigationInfo())
-  }
+#Preview {
+	HighlightActionView(flightId: 1, highlightedIds: .constant([1]))
 }
