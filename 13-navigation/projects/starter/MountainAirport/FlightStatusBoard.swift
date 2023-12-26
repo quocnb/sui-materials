@@ -32,27 +32,73 @@
 
 import SwiftUI
 
-struct FlightStatusBoard: View {
+struct FlightList: View {
 	var flights: [FlightInformation]
+
+	var body: some View {
+		NavigationStack {
+			List(flights, id: \.id) { flight in
+				NavigationLink("\(flight.statusBoardName)") {
+					FlightDetails(flight: flight)
+				}
+			}
+		}
+	}
+}
+
+struct FlightStatusBoard: View {
+	// Saved in AppStorage - Last selected tab
+	@AppStorage("FlightStatusCurrentTab") var selectedTab = 1
+	
+	// State variable - Show / Hide past flights option
 	@State private var hidePast = false
+
+	var flights: [FlightInformation]
 	var shownFlights: [FlightInformation] {
 		hidePast ? flights.filter { $0.localTime >= Date() } : flights
 	}
-  var body: some View {
-		NavigationStack {
-			List(shownFlights, id: \.id) { flight in
-				NavigationLink(flight.statusBoardName, value: flight)
-			}
-			.navigationDestination(for: FlightInformation.self, destination: { flight in
-				FlightDetails(flight: flight)
-			})
-		.navigationTitle("Flight Status")
+	
+	// Display string - Today's date string in "MMM d" format
+	var shortDateString: String {
+		let dateF = DateFormatter()
+		dateF.timeStyle = .none
+		dateF.dateFormat = "MMM d"
+		return dateF.string(from: Date())
+	}
+	
+	var body: some View {
+		TabView(selection: $selectedTab) {
+			FlightList(flights: shownFlights.filter { $0.direction == .arrival })
+				.tabItem {
+					Image("descending-airplane")
+						.resizable()
+					Text("Arrivals")
+				}
+				.tag(0)
+				.badge(shownFlights.filter { $0.direction == .arrival }.count)
+			FlightList(flights: shownFlights)
+				.tabItem {
+					Image(systemName: "airplane")
+						.resizable()
+					Text("All")
+				}
+				.tag(1)
+				.badge(shortDateString)
+			FlightList(flights: shownFlights.filter { $0.direction == .departure })
+				.tabItem {
+					Image("ascending-airplane")
+						.resizable()
+					Text("Departures")
+				}
+				.tag(2)
+				.badge(shownFlights.filter { $0.direction == .departure }.count)
+		}
+		.navigationTitle("Today's Flight Status")
 		.toolbar(content: {
 			ToolbarItem(placement: .topBarTrailing) {
 				Toggle("Hide Past", isOn: $hidePast)
 			}
 		})
-		}
   }
 }
 
