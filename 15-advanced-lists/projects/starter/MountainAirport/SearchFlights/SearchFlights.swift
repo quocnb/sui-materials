@@ -29,10 +29,11 @@
 import SwiftUI
 
 struct SearchFlights: View {
-  var flightData: [FlightInformation]
+  @State var flightData: [FlightInformation]
   @State private var date = Date()
   @State private var directionFilter: FlightDirection = .none
   @State private var city = ""
+	@State private var runningSearch = false
 
   var matchingFlights: [FlightInformation] {
     var matchingFlights = flightData
@@ -40,11 +41,6 @@ struct SearchFlights: View {
     if directionFilter != .none {
       matchingFlights = matchingFlights.filter {
         $0.direction == directionFilter
-      }
-    }
-    if !city.isEmpty {
-      matchingFlights = matchingFlights.filter {
-        $0.otherAirport.lowercased().contains(city.lowercased())
       }
     }
 
@@ -93,10 +89,46 @@ struct SearchFlights: View {
               }
             }
           }
-        }.listStyle(InsetGroupedListStyle())
+        }
+				.overlay(content: {
+					Group {
+						if runningSearch {
+							VStack {
+								Text("Searching...")
+								ProgressView()
+									.progressViewStyle(CircularProgressViewStyle())
+									.tint(.black)
+							}
+							.frame(maxWidth: .infinity, maxHeight: .infinity)
+							.background(.gray)
+							.opacity(0.8)
+						}
+					}
+				})
+				.listStyle(InsetGroupedListStyle())
         Spacer()
       }
-      .searchable(text: $city)
+			.searchable(text: $city, prompt: "City Name") {
+				ForEach(FlightData.citiesContaining(city), id: \.self) { city in
+					Text(city).searchCompletion(city)
+				}
+			}
+			.onSubmit(of: .search, {
+				Task {
+					runningSearch = true
+					await flightData = FlightData.searchFlightsForCity(city)
+					runningSearch = false
+				}
+			})
+			.onChange(of: city, perform: { newValue in
+				if newValue.isEmpty {
+					Task {
+						runningSearch = true
+						await flightData = FlightData.searchFlightsForCity(city)
+						runningSearch = false
+					}
+				}
+			})
       .navigationTitle("Search Flights")
       .padding()
     }

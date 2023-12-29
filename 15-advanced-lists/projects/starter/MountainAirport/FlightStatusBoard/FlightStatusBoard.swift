@@ -29,7 +29,7 @@
 import SwiftUI
 
 struct FlightStatusBoard: View {
-  var flights: [FlightInformation]
+  @State var flights: [FlightInformation]
   var flightToShow: FlightInformation?
   @State private var hidePast = false
   @AppStorage("FlightStatusCurrentTab") var selectedTab = 1
@@ -42,48 +42,64 @@ struct FlightStatusBoard: View {
       flights
   }
 
+	func lastUpdateString(_ date: Date) -> String {
+		let dateF = DateFormatter()
+		dateF.timeStyle = .short
+		dateF.dateStyle = .none
+		return "Last update: \(dateF.string(from: date))"
+	}
+
   var body: some View {
-    TabView(selection: $selectedTab) {
-      FlightList(
-        flights: shownFlights.filter { $0.direction == .arrival },
-				highlightedIds: $highlightedIds
-      )
-      .tabItem {
-        Image("descending-airplane")
-          .resizable()
-        Text("Arrivals")
-      }
-      .tag(0)
-      FlightList(
-        flights: shownFlights,
-        flightToShow: flightToShow,
-				highlightedIds: $highlightedIds
-      )
-      .tabItem {
-        Image(systemName: "airplane")
-          .resizable()
-        Text("All")
-      }
-      .tag(1)
-      FlightList(
-        flights: shownFlights.filter { $0.direction == .departure },
-				highlightedIds: $highlightedIds
-      )
-      .tabItem {
-        Image("ascending-airplane")
-        Text("Departures")
-      }
-      .tag(2)
-    }
-    .onAppear {
-      if flightToShow != nil {
-        selectedTab = 1
-      }
-    }
-    .navigationTitle("Today's Flight Status")
-    .navigationBarItems(
-      trailing: Toggle("Hide Past", isOn: $hidePast)
-    )
+		TimelineView(.everyMinute, content: { context in
+			VStack {
+				Text(lastUpdateString(context.date))
+					.font(.footnote)
+				TabView(selection: $selectedTab) {
+					FlightList(
+						flights: shownFlights.filter { $0.direction == .arrival },
+						highlightedIds: $highlightedIds
+					)
+					.tabItem {
+						Image("descending-airplane")
+							.resizable()
+						Text("Arrivals")
+					}
+					.tag(0)
+					FlightList(
+						flights: shownFlights,
+						flightToShow: flightToShow,
+						highlightedIds: $highlightedIds
+					)
+					.tabItem {
+						Image(systemName: "airplane")
+							.resizable()
+						Text("All")
+					}
+					.tag(1)
+					FlightList(
+						flights: shownFlights.filter { $0.direction == .departure },
+						highlightedIds: $highlightedIds
+					)
+					.tabItem {
+						Image("ascending-airplane")
+						Text("Departures")
+					}
+					.tag(2)
+				}
+				.onAppear {
+					if flightToShow != nil {
+						selectedTab = 1
+					}
+				}
+				.refreshable(action: {
+					await self.flights = FlightData.refreshFlights()
+				})
+				.navigationTitle("Today's Flight Status")
+				.navigationBarItems(
+					trailing: Toggle("Hide Past", isOn: $hidePast)
+			)
+			}
+		})
   }
 }
 
