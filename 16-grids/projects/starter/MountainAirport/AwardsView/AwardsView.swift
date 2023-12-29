@@ -32,28 +32,62 @@
 
 import SwiftUI
 
+struct AwardGrid: View {
+	var title: String
+	var awards: [AwardInformation]
+	
+	var body: some View {
+		Section {
+			ForEach(awards) { award in
+				NavigationLink {
+					
+				} label: {
+					AwardCardView(award: award)
+						.foregroundColor(.black)
+						.aspectRatio(0.67, contentMode: .fit)
+				}
+
+			}
+		} header: {
+			Text(title)
+				.frame(maxWidth: .infinity)
+				.font(.title)
+				.foregroundStyle(.white)
+				.background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10))
+		}
+
+	}
+}
+
 struct AwardsView: View {
   @EnvironmentObject var flightNavigation: AppEnvironment
   var awardArray: [AwardInformation] {
     flightNavigation.awardList
   }
+	
+	var awardColumns: [GridItem] {
+		[
+			GridItem(.adaptive(minimum: 150, maximum: 160))
+		]
+	}
+	
+	var activeAwards: [AwardInformation] {
+		awardArray.filter { $0.awarded }
+	}
+	var inActiveAwards: [AwardInformation] {
+		awardArray.filter { !$0.awarded }
+	}
 
   var body: some View {
     NavigationStack {
-      ScrollView {
-        LazyVStack {
-          ForEach(awardArray, id: \.self) { award in
-            NavigationLink(value: award) {
-              AwardCardView(award: award)
-                .foregroundColor(.black)
-                .frame(width: 150, height: 220)
-            }
-          }
-          .navigationDestination(for: AwardInformation.self) { award in
-            AwardDetails(award: award)
-          }
-        }
-      }
+			ScrollView {
+				LazyVGrid(
+					columns: awardColumns,
+					content: {
+						AwardGrid(title: "Awarded", awards: activeAwards)
+						AwardGrid(title: "Not Awarded", awards: inActiveAwards)
+					})
+			}
       .navigationTitle("Your Awards")
       .padding()
       .background(
