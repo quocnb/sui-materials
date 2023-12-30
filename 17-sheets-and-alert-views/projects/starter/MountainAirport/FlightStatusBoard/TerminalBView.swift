@@ -29,6 +29,9 @@
 import SwiftUI
 
 struct TerminalBView: View {
+	
+	@Environment(\.dismiss) var dismiss
+	
   var body: some View {
     ZStack {
       Image("background-view")
@@ -48,6 +51,9 @@ struct TerminalBView: View {
         Text("\u{2022} Sunset Elements")
         Spacer()
       }
+			.onTapGesture {
+				dismiss()
+			}
       .foregroundColor(.white)
       .padding()
       .font(.title3)

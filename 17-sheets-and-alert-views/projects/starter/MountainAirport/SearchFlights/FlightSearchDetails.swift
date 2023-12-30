@@ -33,6 +33,13 @@
 import SwiftUI
 
 struct FlightSearchDetails: View {
+	@Binding var showModal: Bool
+	@State private var rebookAlert = false
+	@State private var phone = ""
+	@State private var password = ""
+	@State private var checkInFlight: CheckInInfo?
+	@State private var showFlightHistory = false
+	
   var flight: FlightInformation
   @EnvironmentObject var lastFlightInfo: AppEnvironment
 
@@ -42,7 +49,48 @@ struct FlightSearchDetails: View {
         .resizable()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
       VStack(alignment: .leading) {
-        FlightDetailHeader(flight: flight)
+				HStack {
+					FlightDetailHeader(flight: flight)
+					Spacer()
+					Button("Close") {
+						showModal = false
+					}
+				}
+				if flight.status == .canceled {
+					Button("Rebook Flight", role: .cancel) {
+						rebookAlert = true
+					}
+					.alert("Contact Your Airline", isPresented: $rebookAlert) {
+						TextField("Phone", text: $phone)
+						SecureField("Password", text: $password)
+					} message: {
+						Text("We cannot rebook this flight.") +
+							Text("Please enter your phone number and confirm your password.")
+					}
+				}
+				if flight.isCheckInAvailable {
+					Button("Check In for flight") {
+						checkInFlight = CheckInInfo(airline: flight.airline, flight: flight.number)
+					}
+					.actionSheet(item: $checkInFlight) { checkIn in
+						ActionSheet(title: Text("Check In"), message: Text("Check in for \(checkIn.airline) Flight \(checkIn.flight)"),
+						buttons: [
+							.cancel(Text("Not Now")),
+							.destructive(Text("Reschedule"), action: {
+								print("Reschedule flight.")
+							}),
+							.default(Text("Check In"), action: {
+								print("Check-in for \(checkIn.airline) \(checkIn.flight)")
+							})
+						])
+					}
+				}
+				Button("On-Time History") {
+					showFlightHistory.toggle()
+				}
+				.popover(isPresented: $showFlightHistory, arrowEdge: .top) {
+					FlightTimeHistory(flight: flight)
+				}
         FlightInfoPanel(flight: flight)
           .padding()
           .background(
@@ -55,13 +103,14 @@ struct FlightSearchDetails: View {
     }.onAppear {
       lastFlightInfo.lastFlightId = flight.id
     }
+		.interactiveDismissDisabled()
   }
 }
 
 struct FlightSearchDetails_Previews: PreviewProvider {
   static var previews: some View {
     FlightSearchDetails(
-      flight: FlightData.generateTestFlight(date: Date())
+			showModal: .constant(true), flight: FlightData.generateTestFlight(date: Date())
     ).environmentObject(AppEnvironment())
   }
 }

@@ -29,6 +29,8 @@
 import SwiftUI
 
 struct TerminalAView: View {
+	@Environment(\.dismiss) var dismiss
+	
   var body: some View {
     ZStack {
       Image("background-view")
@@ -48,6 +50,9 @@ struct TerminalAView: View {
         Text("\u{2022}  Aqua Sunset")
         Spacer()
       }
+			.onTapGesture {
+				dismiss()
+			}
       .foregroundColor(.white)
       .padding()
       .font(.title3)
