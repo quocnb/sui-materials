@@ -1,4 +1,4 @@
-/// Copyright (c) 2023 Kodeco Inc
+/// Copyright (c) 2024 Kodeco Inc
 /// 
 /// Permission is hereby granted, free of charge, to any person obtaining a copy
 /// of this software and associated documentation files (the "Software"), to deal
@@ -17,11 +17,7 @@
 /// or information technology.  Permission for such use, copying, modification,
 /// merger, publication, distribution, sublicensing, creation of derivative works,
 /// or sale is expressly withheld.
-///
-/// This project and source code may use libraries or frameworks that are
-/// released under various Open-Source licenses. Use of those libraries and
-/// frameworks are governed by their own individual licenses.
-///
+/// 
 /// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 /// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 /// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -32,53 +28,29 @@
 
 import SwiftUI
 
-struct FlightTimeHistory: View {
-  var flight: FlightInformation
-
-  var timeFormatter: RelativeDateTimeFormatter {
-    let rtf = RelativeDateTimeFormatter()
-    rtf.unitsStyle = .full
-    rtf.dateTimeStyle = .named
-    return rtf
-  }
-
-  func relativeDate(_ date: Date) -> String {
-    return timeFormatter.localizedString(for: date, relativeTo: Date())
-  }
-
-  var body: some View {
-    ZStack {
-      Image("background-view")
-        .resizable()
-        .aspectRatio(contentMode: .fill)
-      VStack {
-        Text("On Time History for \(flight.statusBoardName)")
-          .font(.title2)
-          .padding(.top, 30)
-        ScrollView {
-          ForEach(flight.history, id: \.day) { history in
-            HStack {
-              Text("\(history.day) day(s) ago - \(history.flightDelayDescription)")
-                .padding()
-              Spacer()
-            }
-            .background(
-              Color.white.opacity(0.2)
-            )
-          }
-        }
-				HistoryPieChart(flightHistory: flight.history)
-					.frame(width: 250, height: 250)
-					.padding(5)
-      }
-    }.foregroundColor(.white)
-  }
+struct AwardStars: View {
+	var stars: Int = 3
+    var body: some View {
+			Canvas { gContext, size in
+				guard let starSymbol = gContext.resolveSymbol(id: 0) else {
+					return
+				}
+				let centerOffset = (size.width - 20 * Double(stars)) / 2
+				gContext.translateBy(x: centerOffset, y: size.height / 2)
+				for star in 0..<stars {
+					let startX = Double(star) * 20
+					let point = CGPoint(x: startX + 8, y: 0)
+					gContext.draw(starSymbol, at: point, anchor: .leading)
+				}
+			} symbols: {
+				Image(systemName: "star.fill")
+					.resizable()
+					.frame(width: 15, height: 15)
+					.tag(0)
+			}
+    }
 }
 
-struct FlightTimeHistory_Previews: PreviewProvider {
-  static var previews: some View {
-    FlightTimeHistory(
-      flight: FlightData.generateTestFlight(date: Date())
-    )
-  }
+#Preview {
+    AwardStars()
 }
