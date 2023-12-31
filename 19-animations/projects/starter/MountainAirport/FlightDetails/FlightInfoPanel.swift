@@ -63,12 +63,19 @@ struct FlightInfoPanel: View {
           showTerminal.toggle()
         } label: {
           HStack {
+						Image(systemName: "airplane.circle")
+							.imageScale(.large)
+							.padding(10)
+							.rotationEffect(.degrees(showTerminal ? 90 : 270))
+							.animation(.default.speed(0.33), value: showTerminal)
+						Spacer()
             Text(showTerminal ? "Hide Terminal Map" : "Show Terminal Map")
             Spacer()
             Image(systemName: "airplane.circle")
               .imageScale(.large)
               .padding(10)
-              .rotationEffect(.degrees(showTerminal ? 90 : -90))
+              .rotationEffect(.degrees(showTerminal ? 90 : 270))
+							.animation(.interpolatingSpring(mass:  1, stiffness: 100, damping: 10, initialVelocity: 0), value: showTerminal)
           }
         }
         if showTerminal {
